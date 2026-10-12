@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A personal research operating system for graduate work." />
+    <title>Research OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link href="https://api.fontshare.com/v2/css?f[]=general-sans@500,600,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=layout-2" />
+    <link rel="stylesheet" href="paper-features.css" />
+    <link rel="stylesheet" href="persistence.css" />
+    <link rel="stylesheet" href="research.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#dashboard" data-page="dashboard"><span class="brand-mark">R</span> Research OS</a>
+        <nav class="nav" aria-label="Primary navigation">
+          <button class="nav-link active" data-page="dashboard"><span>⊞</span> 대시보드</button>
+          <button class="nav-link" data-page="projects"><span>◇</span> 프로젝트 <b>3</b></button>
+          <button class="nav-link" data-page="papers"><span>▤</span> 논문 라이브러리 <b>8</b></button>
+          <button class="nav-link" data-page="meetings"><span>◫</span> 미팅</button>
+          <button class="nav-link" data-page="calendar"><span>▦</span> 연구 캘린더</button>
+          <button class="nav-link" data-page="inbox"><span>↳</span> 할 일 &amp; 인박스 <b>5</b></button>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="agent-mini" id="open-agent"><span>✦</span><span><small>YOUR RESEARCH COMPANION</small>Research Agent에게 물어보기</span></button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <button class="mobile-menu" aria-label="Open navigation">☰</button>
+          <button class="search" id="search-button"><span>⌕</span> 연구, 논문, 할 일 검색 <kbd>⌘ K</kbd></button>
+          <div class="top-actions"><button class="icon-button" aria-label="알림">◌</button><button class="button primary" id="quick-add">+ 추가</button></div>
+        </header>
+
+        <section class="page active" id="dashboard">
+          <div class="page-intro"><div><p class="eyebrow">10월 12일 · 월요일</p><h1>좋은 아침이에요.</h1><p class="lede">이번 주 마감 <strong>할 일 5개</strong>, 진행 중인 <strong>논문 2편</strong>이 있어요.</p></div><div class="date-chip">W42 <span>·</span> 2026</div></div>
+          <div class="focus-card"><div class="focus-icon">✦</div><div><p class="eyebrow">RESEARCH AGENT · TODAY'S FOCUS</p><h2>합성 설문 실험의 다음 고리를 완성해 보세요.</h2><p>배치 크기 비교 결과가 목요일 미팅의 논의를 구체화해 줍니다. 먼저 실험을 진행하고, 결과는 Workflow에 기록하세요.</p></div><button class="text-button agent-prompt" data-prompt="오늘 무엇에 집중하면 좋을까요?">이유 보기 →</button></div>
+          <section class="paper-capture panel"><div><p class="eyebrow">PAPER INBOX · AI CLASSIFICATION</p><h2>논문을 던져두세요. Agent가 정리합니다.</h2><p>논문 제목, DOI, arXiv 또는 링크를 붙여넣으면 관련 프로젝트와 읽기 우선순위를 제안합니다.</p></div><form id="dashboard-paper-form"><input id="dashboard-paper-input" placeholder="예: https://arxiv.org/... 또는 논문 제목" /><button class="button primary" id="classify-paper-button">AI로 분류하기</button></form><div class="upload-row"><input type="file" id="pdf-upload" accept="application/pdf" hidden /><button class="button secondary" id="pdf-upload-button">↑ PDF 업로드 &amp; AI 분석</button><small>PDF 최대 20MB · 분석 후 원문과 구조를 저장합니다.</small></div><div class="classification-result" id="classification-result" aria-live="polite"></div></section>
+          <section><div class="section-heading"><div><p class="eyebrow">ACTIVE RESEARCH</p><h2>진행 중인 프로젝트</h2></div><button class="text-button" data-page="projects">전체 보기 <span>→</span></button></div><div class="project-grid" id="project-cards"></div></section>
+          <div class="dashboard-grid"><section class="panel today-panel"><div class="section-heading"><div><p class="eyebrow">TODAY</p><h2>오늘의 흐름</h2></div><button class="icon-button" id="add-task" aria-label="할 일 추가">+</button></div><div class="task-list" id="today-tasks"></div></section><section class="panel reading-panel"><div class="section-heading"><div><p class="eyebrow">CURRENTLY READING</p><h2>읽고 있는 논문</h2></div><button class="text-button" data-page="papers">라이브러리 →</button></div><div id="reading-list"></div></section></div>
+          <section class="panel meetings-preview"><div class="section-heading"><div><p class="eyebrow">RECENT MEETINGS</p><h2>최근에 바뀐 것</h2></div><button class="text-button" data-page="meetings">미팅 아카이브 →</button></div><div class="meeting-row"><div class="calendar"><b>11</b><small>OCT</small></div><div><strong>주간 연구 미팅</strong><p>배치 크기 실험을 추가하고, 모델 비교 범위를 좁혔으며, 검증용으로 WVS를 선택했습니다.</p></div><span class="tag">Synthetic Survey</span><button class="arrow" data-page="meetings">→</button></div></section>
+        </section>
+
+        <section class="page" id="projects"><div class="page-intro compact"><div><p class="eyebrow">RESEARCH PORTFOLIO</p><h1>프로젝트</h1><p class="lede">연구 질문, 근거, 다음 실험을 한눈에 잇는 살아있는 지도입니다.</p></div><button class="button primary">+ 새 프로젝트</button></div><div class="project-grid all-projects" id="all-project-cards"></div></section>
+
+        <section class="page" id="project-detail"><button class="back text-button" data-page="projects">← 프로젝트로 돌아가기</button><div class="project-header"><div><p class="eyebrow">ACTIVE PROJECT · EXPERIMENT</p><h1>합성 설문 생성 <small>Synthetic Survey Generation</small></h1><p class="lede">언어 모델로 개인 단위의 설문 응답을 생성하면서, 원자료의 분포와 조건부 관계를 보존하는 연구입니다.</p><div class="meta-line"><span class="status-dot"></span> 순조롭게 진행 중 <span>•</span> 2026년 8월 시작 <span>•</span> 다음 검토 10월 15일</div></div><div class="progress-statement"><b>68%</b><span>프로젝트 진행률</span><div class="progress"><i style="width:68%"></i></div></div></div>
+          <div class="detail-grid"><section class="panel"><p class="eyebrow">RESEARCH WORKFLOW</p><h2>응답 데이터에서 연구 근거까지</h2><div class="workflow" id="workflow"><button class="flow-node done"><span>01</span>설문 데이터<small>정제 및 매핑 완료</small></button><i></i><button class="flow-node done"><span>02</span>전처리<small>변수 인코딩 완료</small></button><i></i><button class="flow-node current"><span>03</span>LLM Fine-tuning<small>LoRA 비교 중</small></button><i></i><button class="flow-node"><span>04</span>합성 응답 생성<small>가상 코호트 생성</small></button><i></i><button class="flow-node"><span>05</span>평가<small>벤치마크 품질 확인</small></button></div><div class="workflow-note" id="workflow-note"><b>LLM Fine-tuning</b><span>현재 단계 · 열린 할 일 2개 · Gao et al. (2025) 연결됨</span></div></section><aside class="panel milestones"><p class="eyebrow">NEXT MILESTONE</p><h2>방법론 비교</h2><p>배치 크기 16 조건에서 q/v LoRA와 all-linear target을 비교합니다.</p><div class="due"><span>15</span><small>OCT<br />THU</small></div><button class="button secondary">실험 노트 보기</button></aside></div>
+          <div class="dashboard-grid"><section class="panel"><p class="eyebrow">PROJECT TASKS</p><h2>다음 단계</h2><div class="task-list" id="project-tasks"></div></section><section class="panel"><p class="eyebrow">CONNECTED KNOWLEDGE</p><h2>다시 살펴볼 근거</h2><div class="connected-paper"><span class="paper-icon">↗</span><div><strong>Large Language Models as Simulated Survey Respondents</strong><p>Gao et al. · 2025 · 읽기 진행률 72%</p></div><span class="tag indigo">읽는 중</span></div><div class="connected-paper"><span class="paper-icon">↗</span><div><strong>Evaluating Synthetic Populations with Conditional Metrics</strong><p>Kim et al. · 2024 · 완독</p></div><span class="tag success">읽음</span></div></section></div>
+        </section>
+
+        <section class="page" id="papers"><div class="page-intro compact"><div><p class="eyebrow">KNOWLEDGE LIBRARY</p><h1>논문</h1><p class="lede">읽기 목록을 실제 연구 작업과 연결해 관리하세요.</p></div><button class="button primary" id="add-paper">+ 논문 추가</button></div><div class="library-toolbar"><div class="filter-tabs"><button class="active">전체 <b>8</b></button><button>읽을 논문 <b>3</b></button><button>읽는 중 <b>2</b></button><button>완독 <b>3</b></button></div><button class="button secondary">⌘ 필터</button></div><div class="paper-table"><div class="table-head"><span>논문</span><span>프로젝트</span><span>상태</span><span>진행률</span></div><div id="paper-rows"></div></div></section>
+
+        <section class="page" id="paper-detail"></section>
+
+        <section class="page" id="meetings"><div class="page-intro compact"><div><p class="eyebrow">MEETING MEMORY</p><h1>미팅</h1><p class="lede">대화를 결정과 연결된 다음 작업으로 전환하세요.</p></div><button class="button primary">+ 전사문 불러오기</button></div><div class="meeting-layout"><aside class="meeting-list"><button class="meeting-select active"><small>10월 11일 · 52분</small><strong>주간 연구 미팅</strong><span>합성 설문 생성</span></button><button class="meeting-select"><small>10월 05일 · 35분</small><strong>방법론 리딩 그룹</strong><span>개인 연구</span></button><button class="meeting-select"><small>9월 28일 · 46분</small><strong>프로젝트 점검 미팅</strong><span>Silicon Sampling</span></button></aside><article class="meeting-detail panel"><div class="meeting-detail-head"><div><p class="eyebrow">10월 11일 · SYNTHETIC SURVEY</p><h2>주간 연구 미팅</h2></div><button class="button secondary">전사문 보기</button></div><div class="summary"><p class="eyebrow">AI SUMMARY</p><p>초기 LoRA 결과를 검토한 뒤, 방법론을 확정하기 전에 목표를 좁힌 비교 실험이 필요하다는 데 합의했습니다. WVS는 유망한 외부 검증 자료이지만, 핵심 변수는 빠르게 점검해야 합니다.</p></div><div class="decision-grid"><div><p class="eyebrow">DECISIONS</p><ul><li>배치 크기 16 실험을 진행한다.</li><li>q/v target과 all-linear LoRA를 비교한다.</li><li>WVS를 검증 후보로 사용한다.</li></ul></div><div><p class="eyebrow">RESEARCH THREAD</p><p>구조화된 인구통계 조건이 변수 간 응답 일관성을 높이는지 검증합니다.</p><button class="text-button agent-prompt" data-prompt="최근 미팅의 연구 맥락을 설명해줘">Agent와 더 살펴보기 →</button></div></div><div><div class="section-heading"><div><p class="eyebrow">ACTION ITEMS</p><h2>미팅에서 생성된 할 일</h2></div><button class="text-button" id="create-action">+ 할 일 생성</button></div><div class="task-list" id="meeting-actions"></div></div></article></div></section>
+
+        <section class="page" id="inbox"><div class="page-intro compact"><div><p class="eyebrow">TASK MANAGEMENT</p><h1>할 일 &amp; 인박스</h1><p class="lede">빠르게 기록하고, 연구 안에서 명확한 위치를 만들어 보세요.</p></div><button class="button primary" id="inbox-add">+ 새 할 일</button></div><div class="inbox-capture"><span>✦</span><input id="capture-input" placeholder="논문, 연구 아이디어, 할 일을 붙여넣으세요…" /><button class="button primary" id="capture-button">기록</button></div><div class="kanban"><section><div class="kanban-head"><p>INBOX <b id="inbox-count">2</b></p><span>•••</span></div><div class="task-column" id="inbox-column"></div></section><section><div class="kanban-head"><p>계획됨 <b>2</b></p><span>•••</span></div><div class="task-column" id="planned-column"></div></section><section><div class="kanban-head"><p>진행 중 <b>2</b></p><span>•••</span></div><div class="task-column" id="progress-column"></div></section><section><div class="kanban-head"><p>대기 중 <b>1</b></p><span>•••</span></div><div class="task-column" id="waiting-column"></div></section></div></section>
+      </main>
+    </div>
+
+    <aside class="agent-panel" id="agent-panel" aria-label="Research Agent"><div class="agent-head"><div><span class="agent-spark">✦</span><span><p class="eyebrow">RESEARCH OS</p><h2>Research Agent</h2></span></div><button class="icon-button" id="close-agent" aria-label="Agent 닫기">×</button></div><div class="agent-context"><span class="status-dot"></span> 프로젝트 3개, 논문 8편, 미팅 6개와 연결됨</div><div class="chat" id="chat"><div class="assistant-message"><span>✦</span><p>안녕하세요. 지금 무엇을 해야 할지 정리하고, 논문 사이의 연결을 찾거나, 미팅을 다음 계획으로 바꾸는 일을 도와드릴게요.</p></div></div><div class="suggestions"><button class="agent-prompt" data-prompt="오늘 무엇에 집중하면 좋을까요?">오늘 무엇에 집중할까요?</button><button class="agent-prompt" data-prompt="현재 연구에 가장 중요한 미완독 논문은 무엇인가요?">다음에 읽을 논문 고르기</button></div><form class="chat-input" id="agent-form"><input id="agent-input" placeholder="연구에 관해 물어보세요…" /><button class="button primary" aria-label="보내기">↑</button></form></aside>
+    <dialog id="add-dialog"><form method="dialog"><button class="dialog-close" value="cancel">×</button><p class="eyebrow">QUICK CAPTURE</p><h2>논문 추가</h2><label>제목<input id="new-paper-title" required placeholder="논문 제목 또는 DOI" /></label><label>프로젝트 연결<select><option>합성 설문 생성</option><option>Silicon Sampling</option><option>개인 연구</option></select></label><menu><button class="button secondary" value="cancel">취소</button><button class="button primary" id="save-paper" value="default">라이브러리에 추가</button></menu></form></dialog>
+    <script src="app.js?v=project-edit-1"></script>
+    <script src="research.js?v=project-edit-1"></script>
+    <link rel="stylesheet" href="reader.css" />
+    <script src="reader.js?v=garden-1"></script>
+    <link rel="stylesheet" href="connections.css?v=garden-8" />
+    <script src="connections.js?v=project-edit-1"></script>
+    <link rel="stylesheet" href="auth-ui.css" />
+    <link rel="stylesheet" href="project-colors.css?v=project-edit-1" />
+    <script src="auth-ui.js"></script>
+  </body>
+</html>

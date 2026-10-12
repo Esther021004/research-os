@@ -1,0 +1,17 @@
+data/
+.venv/
+venv/
+.env
+.env.*
+__pycache__/
+*.py[cod]
+*.sqlite*
+*.db
+*.pdf
+*.pem
+*.key
+credentials*.json
+*.log
+.DS_Store
+.idea/
+.vscode/
