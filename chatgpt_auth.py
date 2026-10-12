@@ -291,7 +291,7 @@ def configure(data):
                 raise AuthError('저장된 계정을 찾지 못했습니다.')
             saved['active'] = data['account']
         if 'provider' in data:
-            if data['provider'] not in ('chatgpt', 'api_key'):
+            if data['provider'] not in ('chatgpt', 'api_key', 'claude'):
                 raise AuthError('지원하지 않는 연결 방식입니다.')
             if data['provider'] == 'api_key' and not os.getenv('OPENAI_API_KEY'):
                 raise AuthError('서버에 OPENAI_API_KEY가 설정되어 있지 않습니다.')

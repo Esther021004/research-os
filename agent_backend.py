@@ -83,7 +83,10 @@ def respond(data, provider, chatgpt):
     prompt, records = prepare(data)
     schema = copy.deepcopy(SCHEMA)
     schema['properties']['actions']['items']['properties']['project']['enum'] = project_ids(records)
-    if provider == 'chatgpt':
+    if provider == 'claude':
+        import claude_backend
+        result = claude_backend.infer(prompt, schema)
+    elif provider == 'chatgpt':
         result = chatgpt.infer(prompt, schema)
     else:
         key = os.getenv('OPENAI_API_KEY')
