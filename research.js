@@ -1,17 +1,13 @@
 // Project workflows, calendar and source-grounded paper reading.
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const readLocal = (key, fallback) => {try{return JSON.parse(localStorage.getItem(key)) ?? fallback}catch{return fallback}};
-function writeLocal(key, value) {localStorage.setItem(key, JSON.stringify(value))}
+const readLocal = (key, fallback) => {try{return JSON.parse(appStorage.getItem(key)) ?? fallback}catch{return fallback}};
+function writeLocal(key, value) {appStorage.setItem(key, JSON.stringify(value))}
 const uid = () => crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 const projectLabel = id => projects.find(p=>p.id===id)?.name || '미분류';
-const projectId = name => projects.find(p=>p.id===name||p.name===name||p.aliases?.includes(name))?.id || (/합성|Synthetic Survey/.test(name)?'synthetic':/Silicon/.test(name)?'silicon':/방법론|Methods|개인/.test(name)?'methods':'none');
-let activeProject = 'synthetic', selectedPaper = null, paperFilter = '전체';
+const projectId = name => projects.find(p=>p.id===name||p.name===name||p.aliases?.includes(name))?.id || (window.RESEARCH_CLEAN?'none':/합성|Synthetic Survey/.test(name)?'synthetic':/Silicon/.test(name)?'silicon':/방법론|Methods|개인/.test(name)?'methods':'none');
+let activeProject = projects[0]?.id || 'none', selectedPaper = null, paperFilter = '전체';
 let workflows = readLocal('research-workflows-v1', {});
-const defaultFlows = {
-  synthetic: '설문 데이터 수집 → 전처리 → LLM Fine-tuning → 합성 응답 생성 → 분포 및 조건부 일관성 평가',
-  silicon: '연구 질문 설정 → Persona 설계 → 에이전트 표본 추출 → 반복 실행 → 인간 표본과 비교',
-  methods: '연구 주제 선정 → 관련 논문 수집 → 핵심 가정 정리 → 방법론 비교 → 리딩 그룹 토론'
-};
+const defaultFlows = window.RESEARCH_SEED?.flows || {};
 const toast = document.createElement('div');toast.className='app-toast';toast.setAttribute('role','status');document.body.append(toast);
 let toastTimer;
 function notifyUser(message){toast.textContent=message;toast.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('visible'),6000)}
@@ -51,7 +47,9 @@ function parseWorkflow(text){
 }
 function openProject(id){activeProject=id;renderProjectDetail();navigate('project-detail')}
 function renderProjectDetail(){
-  const p=projects.find(p=>p.id===activeProject), w=workflows[p.id] || {text:defaultFlows[p.id],nodes:parseWorkflow(defaultFlows[p.id])};
+  const p=projects.find(p=>p.id===activeProject);
+  if(!p){$('#project-detail').innerHTML='<section class="panel"><h2>프로젝트를 먼저 만들어보세요.</h2><button class="button primary" onclick="navigate(\'projects\')">프로젝트로 이동</button></section>';return}
+  const w=workflows[p.id] || {text:defaultFlows[p.id]||'',nodes:defaultFlows[p.id]?parseWorkflow(defaultFlows[p.id]):[]};
   $('#project-detail').dataset.project=p.id;
   $('#project-detail').innerHTML=`<button class="back text-button" data-page="projects">← 프로젝트로 돌아가기</button>
     <div class="project-header"><div><p class="eyebrow">RESEARCH PROJECT</p><h1>${p.name}</h1><p class="lede">${p.desc}</p></div><div class="progress-statement"><b>${p.progress}%</b><span>프로젝트 진행률</span>${progress(p.progress)}</div></div>
@@ -153,7 +151,7 @@ $('#pdf-upload').onchange=async e=>{const file=e.target.files[0];if(!file)return
 const today=new Date(), dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 let month=new Date(today.getFullYear(),today.getMonth(),1), selectedDate=dateKey(today), eventFilter='all';
 let events=readLocal('research-calendar-v1',[]);
-const meetingEvents=[{id:'meeting-1',title:'주간 연구 미팅',date:'2026-10-11',project:'synthetic',kind:'미팅',readonly:true},{id:'meeting-2',title:'방법론 리딩 그룹',date:'2026-10-05',project:'methods',kind:'미팅',readonly:true},{id:'meeting-3',title:'Silicon Sampling 점검',date:'2026-09-28',project:'silicon',kind:'미팅',readonly:true}];
+const meetingEvents=window.RESEARCH_SEED?.meetings || [];
 function allEvents(){return [...meetingEvents,...events,...tasks.flatMap((t,i)=>{let date=t.dueDate;if(!date&&t.due==='오늘')date=dateKey(today);const m=t.due?.match(/^(\d+)월 (\d+)일$/);if(!date&&m)date=`2026-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;return date?[{id:`task-${i}`,title:t.title,date,project:projectId(t.project),kind:'할 일',done:t.done,readonly:true,taskIndex:i}]:[]})].filter(e=>eventFilter==='all'||e.project===eventFilter)}
 const calendar=document.createElement('section');calendar.id='calendar';calendar.className='page';$('.main').append(calendar);
 function renderCalendar(){
@@ -172,7 +170,7 @@ function renderCalendar(){
 }
 const eventDialog=document.createElement('dialog');eventDialog.className='event-dialog';document.body.append(eventDialog);
 function editEvent(event){
-  eventDialog.innerHTML=`<form id="event-form"><p class="eyebrow">RESEARCH EVENT</p><h2>${event?'일정 수정':'새 일정'}</h2><label>제목<input name="title" required maxlength="200" value="${escapeHTML(event?.title||'')}"></label><div class="event-fields"><label>날짜<input name="date" type="date" required value="${event?.date||selectedDate}"></label><label>시간 (선택)<input name="time" type="time" value="${event?.time||''}"></label></div><label>프로젝트<select name="project">${projects.map(p=>`<option value="${p.id}" ${event?.project===p.id?'selected':''}>${p.name}</option>`).join('')}</select></label><label>유형<select name="kind">${['미팅','실험','마감','논문 읽기'].map(k=>`<option ${event?.kind===k?'selected':''}>${k}</option>`).join('')}</select></label><div class="action-row">${event?'<button type="button" class="button secondary" id="delete-event">일정 삭제</button>':''}<button type="button" class="button secondary" id="cancel-event">취소</button><button class="button primary">저장</button></div></form>`;
+  eventDialog.innerHTML=`<form id="event-form"><p class="eyebrow">RESEARCH EVENT</p><h2>${event?'일정 수정':'새 일정'}</h2><label>제목<input name="title" required maxlength="200" value="${escapeHTML(event?.title||'')}"></label><div class="event-fields"><label>날짜<input name="date" type="date" required value="${event?.date||selectedDate}"></label><label>시간 (선택)<input name="time" type="time" value="${event?.time||''}"></label></div><label>프로젝트<select name="project"><option value="none">기타 (미분류)</option>${projects.map(p=>`<option value="${p.id}" ${event?.project===p.id?'selected':''}>${p.name}</option>`).join('')}</select></label><label>유형<select name="kind">${['미팅','실험','마감','논문 읽기'].map(k=>`<option ${event?.kind===k?'selected':''}>${k}</option>`).join('')}</select></label><div class="action-row">${event?'<button type="button" class="button secondary" id="delete-event">일정 삭제</button>':''}<button type="button" class="button secondary" id="cancel-event">취소</button><button class="button primary">저장</button></div></form>`;
   $('#cancel-event').onclick=()=>eventDialog.close();
   if(event)$('#delete-event').onclick=()=>{const old=events;events=events.filter(e=>e.id!==event.id);writeLocal('research-calendar-v1',events);eventDialog.close();renderCalendar();toast.innerHTML='일정을 삭제했습니다. ';const undo=document.createElement('button');undo.textContent='되돌리기';undo.onclick=()=>{events=old;writeLocal('research-calendar-v1',events);renderCalendar();toast.classList.remove('visible')};toast.append(undo);toast.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('visible'),10000)};
   $('#event-form').onsubmit=e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.target));if(!data.title.trim())return;const item={...data,id:event?.id||uid()};events=events.filter(x=>x.id!==item.id);events.push(item);writeLocal('research-calendar-v1',events);selectedDate=item.date;const [y,m]=item.date.split('-').map(Number);month=new Date(y,m-1,1);eventDialog.close();renderCalendar();notifyUser('일정을 저장했습니다.')};eventDialog.showModal();

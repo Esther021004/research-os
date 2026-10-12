@@ -5,7 +5,7 @@ Only loopback hosting is supported. OAuth completion always requires the user.
 """
 import base64
 import contextlib
-import fcntl
+from file_lock import exclusive_lock
 import hashlib
 import json
 import os
@@ -30,7 +30,8 @@ AUTHORIZE = ISSUER + '/api/accounts/authorize'
 TOKEN = ISSUER + '/api/accounts/oauth/token'
 RESOURCE = 'https://api.openai.com/v1'
 SCOPES = 'openid profile email offline_access resource.invoke chatgpt.tokens.use.direct'
-AUTH_DIR = Path(__file__).resolve().parent / 'data' / 'auth'
+from runtime_paths import DATA
+AUTH_DIR = DATA / 'auth'
 LOCK = threading.RLock()
 PENDING = {}
 SESSIONS = {}
@@ -89,8 +90,7 @@ def storage():
         AUTH_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
         os.chmod(AUTH_DIR, 0o700)
         fd = os.open(str(AUTH_DIR / 'store.lock'), os.O_CREAT | os.O_RDWR, 0o600)
-        with os.fdopen(fd, 'a') as lock_file:
-            fcntl.flock(lock_file, fcntl.LOCK_EX)
+        with os.fdopen(fd, 'r+b') as lock_file, exclusive_lock(lock_file):
             path = AUTH_DIR / 'credentials.json'
             if path.exists():
                 os.chmod(path, 0o600)

@@ -1,31 +1,15 @@
-const projects=[
-  {id:'synthetic',name:'합성 설문 생성',desc:'LLM 기반 개인 응답 시뮬레이션',progress:68,next:'LoRA target module 비교',symbol:'◇',status:'실험',theme:'violet'},
-  {id:'silicon',name:'Silicon Sampling',desc:'언어 모델 에이전트의 표본 행동 연구',progress:42,next:'벤치마크 설계 검토',symbol:'◈',status:'연구',theme:'emerald'},
-  {id:'methods',name:'방법론 리딩 그룹',desc:'인과추론 방법론의 지속적인 지도',progress:31,next:'목요일 토론 준비',symbol:'⌘',status:'읽는 중',theme:'amber'}
-];
-try{const saved=JSON.parse(localStorage.getItem('research-project-settings-v1')||'{}');for(const p of projects){const s=saved[p.id];if(s&&typeof s.name==='string'&&!/[<>]/.test(s.name+s.desc+s.next+s.status)){for(const key of ['name','desc','next','status','color','aliases'])if(s[key]!==undefined)p[key]=s[key]}}}catch{/* Keep built-in projects if storage is unavailable. */}
-let papers=[
-  {title:'Large Language Models as Simulated Survey Respondents',authors:'Gao et al. · 2025',project:'합성 설문',status:'읽는 중',progress:72,section:'4. Experiments'},
-  {title:'Evaluating Synthetic Populations with Conditional Metrics',authors:'Kim et al. · 2024',project:'합성 설문',status:'완독',progress:100,section:'완독'},
-  {title:'The Illusion of Understanding in LLM Agents',authors:'Wang et al. · 2026',project:'Silicon Sampling',status:'읽는 중',progress:30,section:'2. Related Work'},
-  {title:'Survey Simulation with Demographic Personas',authors:'Rodriguez et al. · 2025',project:'합성 설문',status:'읽을 논문',progress:0,section:'시작 전'},
-  {title:'A Practical Guide to Causal Representation Learning',authors:'Pearl et al. · 2024',project:'방법론 리딩',status:'읽을 논문',progress:0,section:'시작 전'}
-];
-let tasks=[
-  {title:'배치 크기 16 실험 실행',project:'합성 설문',due:'오늘',priority:'high',done:false,group:'progress'},
-  {title:'목요일 미팅 슬라이드 초안 작성',project:'합성 설문',due:'오늘',priority:'high',done:false,group:'planned'},
-  {title:'Gao et al. §4 실험 파트 읽기',project:'합성 설문',due:'오늘',priority:'low',done:false,group:'progress'},
-  {title:'WVS 변수 점검',project:'합성 설문',due:'10월 14일',priority:'high',done:false,group:'planned'},
-  {title:'persona simulation 논문 저장',project:'인박스',due:'날짜 없음',priority:'low',done:false,group:'inbox'},
-  {title:'벤치마크 지표 확인',project:'Silicon Sampling',due:'대기 중',priority:'low',done:false,group:'waiting'},
-  {title:'전처리 노트 아카이브',project:'합성 설문',due:'완료',priority:'low',done:true,group:'inbox'}
-];
-try{const storedTasks=JSON.parse(localStorage.getItem('research-os-tasks'));if(Array.isArray(storedTasks))tasks=storedTasks}catch(_){}
+const appStorage={getItem:key=>localStorage.getItem((window.RESEARCH_CLEAN?'release-v1:':'')+key),setItem:(key,value)=>localStorage.setItem((window.RESEARCH_CLEAN?'release-v1:':'')+key,value)};
+const projects=structuredClone(window.RESEARCH_SEED?.projects || []);
+try{const created=JSON.parse(appStorage.getItem('research-created-projects-v1')||'[]');if(Array.isArray(created))for(const p of created){if(p&&/^project-[a-z0-9-]+$/.test(p.id)&&typeof p.name==='string'&&!/[<>]/.test(p.name+(p.desc||'')+(p.next||''))&&!projects.some(x=>x.id===p.id))projects.push(p)}}catch{}
+try{const saved=JSON.parse(appStorage.getItem('research-project-settings-v1')||'{}');for(const p of projects){const s=saved[p.id];if(s&&typeof s.name==='string'&&!/[<>]/.test(s.name+s.desc+s.next+s.status)){for(const key of ['name','desc','next','status','color','aliases'])if(s[key]!==undefined)p[key]=s[key]}}}catch{/* Keep built-in projects if storage is unavailable. */}
+let papers=structuredClone(window.RESEARCH_SEED?.papers || []);
+let tasks=structuredClone(window.RESEARCH_SEED?.tasks || []);
+try{const storedTasks=JSON.parse(appStorage.getItem('research-os-tasks'));if(Array.isArray(storedTasks))tasks=storedTasks}catch(_){}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function progress(p){return `<div class="progress"><i style="width:${p}%"></i></div>`}
 function renderProjects(){const card=p=>`<article class="project-card project-${p.theme}" data-project="${p.id}"><div class="top"><span class="symbol">${p.symbol}</span><span class="status">${p.status}</span></div><h3>${p.name}</h3><p>${p.desc}</p><div class="card-bottom"><div class="progress-label"><span>진행률</span><b>${p.progress}%</b></div>${progress(p.progress)}<div class="next">다음 · <b>${p.next}</b></div></div></article>`;$('#project-cards').innerHTML=projects.map(card).join('');$('#all-project-cards').innerHTML=projects.map(card).join('');$$('.project-card').forEach(el=>el.onclick=()=>navigate(el.dataset.project==='synthetic'?'project-detail':'projects'))}
 function taskRow(t,i){return `<div class="task-row"><input class="check" aria-label="${escapeHTML(t.title)} 완료" type="checkbox" data-task="${i}" ${t.done?'checked':''}><div class="priority ${t.priority==='low'?'low':''}"></div><div class="task-title ${t.done?'done':''}">${escapeHTML(t.title)}<small>${escapeHTML(t.project)} · ${escapeHTML(t.due)}</small></div></div>`}
-function persistTasks(){localStorage.setItem('research-os-tasks',JSON.stringify(tasks))}
+function persistTasks(){appStorage.setItem('research-os-tasks',JSON.stringify(tasks))}
 function renderTasks(){const active=tasks.filter(t=>!t.done);$('#today-tasks').innerHTML=active.slice(0,3).map((t)=>taskRow(t,tasks.indexOf(t))).join('');$('#project-tasks').innerHTML=tasks.filter(t=>t.project==='합성 설문').slice(0,3).map(t=>taskRow(t,tasks.indexOf(t))).join('');$('#meeting-actions').innerHTML=tasks.filter(t=>['배치 크기 16 실험 실행','WVS 변수 점검','목요일 미팅 슬라이드 초안 작성'].includes(t.title)).map(t=>taskRow(t,tasks.indexOf(t))).join('');$$('.check').forEach(c=>c.onchange=()=>{tasks[c.dataset.task].done=c.checked;persistTasks();renderTasks();renderKanban()})}
 function renderReading(){const current=papers.filter(p=>p.status==='읽는 중');$('#reading-list').innerHTML=current.map(p=>`<div class="paper-reading"><strong>${p.title}</strong><p>${p.section}</p><div class="reading-progress">${progress(p.progress)}<span>${p.progress}%</span></div></div>`).join('')}
 function renderPapers(){const badge=s=>s==='완독'?'success':s==='읽는 중'?'indigo':'';$('#paper-rows').innerHTML=papers.map((p,i)=>`<div class="paper-row" data-paper="${i}"><div class="paper-title">${p.title}<small>${p.authors}</small></div><div class="paper-project">${p.project}</div><div><span class="tag ${badge(p.status)}">${p.status}</span></div><div class="table-progress">${progress(p.progress)}<small>${p.progress}%</small></div></div>`).join('');$$('.paper-row').forEach(row=>row.onclick=()=>{renderPaperDetail(papers[row.dataset.paper]);navigate('paper-detail')})}
@@ -37,7 +21,7 @@ function renderKanban(){['inbox','planned','progress','waiting'].forEach(g=>{con
 function navigate(id){$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.nav-link').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'})}
 $$('[data-page]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.page)));
 $('#open-agent').onclick=()=>$('#agent-panel').classList.add('open');$('#close-agent').onclick=()=>$('#agent-panel').classList.remove('open');
-function answer(q){const low=q.toLowerCase();if(low.includes('집중')||low.includes('오늘')||low.includes('focus'))return '배치 크기 16 실험부터 시작하세요. 목요일 미팅에 가장 직접적으로 필요한 결과이며, q/v와 all-linear 비교를 진행할 수 있게 해줍니다. 다음으로 Gao et al. §4를 읽으며 평가 지표를 정하면 좋겠습니다.';if(low.includes('논문')||low.includes('읽')||low.includes('paper'))return '다음에는 “Large Language Models as Simulated Survey Respondents”를 읽어 보세요. 이미 72%까지 읽었고, 실험 설계가 현재 LoRA 비교와 직접 연결됩니다.';if(low.includes('미팅')||low.includes('맥락')||low.includes('meeting'))return '반복해서 등장한 연구 맥락은 조건부 일관성입니다. 팀은 개별 응답의 자연스러움뿐 아니라, 인구통계와 여러 응답 변수 사이의 관계가 일관되게 유지되는 근거를 원합니다.';return '다음 단계로는 실험 결과를 LLM Fine-tuning Workflow 노드에 연결하고, 배치 크기가 조건부 일관성에 어떤 변화를 주는지 기록해 보세요. 다음 미팅의 논의를 훨씬 탄탄하게 만들 수 있습니다.'}
+function answer(q){return 'Research Agent의 AI 연결 설정과 참고 자료를 확인해 주세요.'}
 function ask(q){if(!q.trim())return;const chat=$('#chat');chat.insertAdjacentHTML('beforeend',`<div class="user-message">${q}</div><div class="assistant-message"><span>✦</span><p>${answer(q)}</p></div>`);chat.scrollTop=chat.scrollHeight;$('#agent-panel').classList.add('open')}
 $('#agent-form').onsubmit=e=>{e.preventDefault();ask($('#agent-input').value);$('#agent-input').value=''};$$('.agent-prompt').forEach(b=>b.onclick=()=>ask(b.dataset.prompt));
 function paperFromAnalysis(analysis,source,filePath=''){return{title:analysis.title,authors:analysis.authors,project:analysis.project,status:'읽을 논문',progress:0,section:'시작 전',source,analysis,file_path:filePath}}

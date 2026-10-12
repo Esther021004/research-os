@@ -10,4 +10,4 @@ if ! .venv/bin/python -c 'import jwt, cryptography' >/dev/null 2>&1; then
   .venv/bin/python -m pip install -r requirements.txt
 fi
 print "이 창을 열어 두고 http://127.0.0.1:8090 으로 접속하세요. 종료: Control+C"
-.venv/bin/python server.py
+.venv/bin/python launch-source.py

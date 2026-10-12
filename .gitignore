@@ -1,6 +1,14 @@
 data/
+data-release/
+uploads/
+auth/
+webview/
 .venv/
 venv/
+.desktop-venv/
+desktop-build-*/
+build/
+dist/
 .env
 .env.*
 __pycache__/
@@ -15,3 +23,4 @@ credentials*.json
 .DS_Store
 .idea/
 .vscode/
+demo-data.js
